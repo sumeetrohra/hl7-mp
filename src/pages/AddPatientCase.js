@@ -1,0 +1,276 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useState, useEffect, useContext } from 'react';
+import { Form, Button } from 'react-bootstrap';
+import gql from 'graphql-tag';
+import { withApollo, Mutation } from 'react-apollo';
+import { withRouter } from 'react-router-dom';
+
+import { AuthContext } from '../AuthConfig';
+
+export const GET_HOSPITALS_QUERY = gql`
+  query getHospitals {
+    getHospitals {
+      id
+      name
+    }
+  }
+`;
+
+const AddPatientCase = ({ match, client, history }) => {
+  const { patientId } = match.params;
+  const { authState } = useContext(AuthContext);
+
+  const {
+    mp: { id }
+  } = authState;
+
+  const [icdCodes, setIcdCodes] = useState([]);
+  const [icdSubCodes, setIcdSubCodes] = useState([]);
+  const [hospitals, setHospitals] = useState([]);
+  const [filteredIcdSubCodes, setFilteredIcdSubCodes] = useState([]);
+
+  const [selectedIcdCodeID, setSelectedIcdCodeID] = useState('');
+  const [selectedIcdSubCodeID, setSelectedIcdSubCodeID] = useState('');
+  const [selectedHospitalId, setSelectedHospitalId] = useState('');
+  const [HPC, setHPC] = useState('');
+  const [MoI, setMoI] = useState('');
+  const [DnV, setDnV] = useState('');
+  const [clinicNote, setClinicNote] = useState('');
+  const [diagnosisType, setDiagnosisType] = useState('');
+  const [currentClinicalStatus, setCurrentClinicalStatus] = useState('');
+
+  const GET_ICD_CODES_QUERY = gql`
+    query getIcdCodes {
+      getIcdCodes {
+        id
+        icdCode
+        commonName
+      }
+    }
+  `;
+
+  const GET_ICD_SUB_CODES_QUERY = gql`
+    query getIcdSubCodes {
+      getIcdSubCodes {
+        id
+        icdSubCode
+        scientificName
+        icdCode {
+          id
+        }
+      }
+    }
+  `;
+
+  const ADD_PATIENT_CASE_MUTATION = gql`
+    mutation addPatientCase(
+      $patientId: String!
+      $mpId: String!
+      $selectedIcdCodeID: String!
+      $selectedIcdSubCodeID: String!
+      $selectedHospitalId: String!
+      $HPC: String!
+      $MoI: String
+      $DnV: String
+      $clinicNote: String!
+      $diagnosisType: String!
+      $currentClinicalStatus: String!
+    ) {
+      addPatientCase(
+        patientId: $patientId
+        mpId: $mpId
+        icdCodeId: $selectedIcdCodeID
+        icdSubCodeId: $selectedIcdSubCodeID
+        hospitalId: $selectedHospitalId
+        HPC: $HPC
+        MoI: $MoI
+        DnV: $DnV
+        clinicNote: $clinicNote
+        diagnosisType: $diagnosisType
+        currentClinicalStatus: $currentClinicalStatus
+      ) {
+        id
+        patientCase {
+          id
+        }
+      }
+    }
+  `;
+
+  useEffect(() => {
+    (async function() {
+      const results = await client.query({
+        query: GET_ICD_CODES_QUERY,
+        fetchPolicy: 'network-only'
+      });
+      setIcdCodes(results.data.getIcdCodes);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async function() {
+      const results = await client.query({
+        query: GET_ICD_SUB_CODES_QUERY,
+        fetchPolicy: 'network-only'
+      });
+      setIcdSubCodes(results.data.getIcdSubCodes);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async function() {
+      const results = await client.query({
+        query: GET_HOSPITALS_QUERY,
+        fetchPolicy: 'network-only'
+      });
+      setHospitals(results.data.getHospitals);
+    })();
+  }, []);
+
+  const handleSelectICDCode = e => {
+    const icdCodeID = e.target.value;
+    setSelectedIcdCodeID(icdCodeID);
+    const filteredSubCodes = icdSubCodes.filter(
+      el => el.icdCode.id === icdCodeID
+    );
+    setFilteredIcdSubCodes(filteredSubCodes);
+  };
+
+  return (
+    <>
+      <h3>Add Case</h3>
+      <Form onSubmit={e => e.preventDefault()}>
+        <Form.Group>
+          <Form.Label>ICD code</Form.Label>
+          <Form.Control as="select" required onChange={handleSelectICDCode}>
+            <option>Select one...</option>
+            {icdCodes.length > 0 &&
+              icdCodes.map(({ icdCode, commonName, id }, i) => (
+                <option
+                  key={i}
+                  value={id}
+                >{`Code: ${icdCode}, Name: ${commonName}`}</option>
+              ))}
+          </Form.Control>
+        </Form.Group>
+        {filteredIcdSubCodes.length > 0 && (
+          <Form.Group>
+            <Form.Label>ICD sub code</Form.Label>
+            <Form.Control
+              as="select"
+              required
+              onChange={e => setSelectedIcdSubCodeID(e.target.value)}
+            >
+              <option>Select one...</option>
+              {filteredIcdSubCodes.map(
+                ({ id, icdSubCode, scientificName }, i) => (
+                  <option
+                    key={i}
+                    value={id}
+                  >{`Sub Code: ${icdSubCode}, Scientific name: ${scientificName}`}</option>
+                )
+              )}
+            </Form.Control>
+          </Form.Group>
+        )}
+        <Form.Group>
+          <Form.Label>Hospital</Form.Label>
+          <Form.Control
+            as="select"
+            required
+            onChange={e => setSelectedHospitalId(e.target.value)}
+          >
+            <option>Select one...</option>
+            {hospitals.length > 0 &&
+              hospitals.map(({ id, name }, i) => (
+                <option key={i} value={id}>
+                  {name}
+                </option>
+              ))}
+          </Form.Control>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>HPC</Form.Label>
+          <Form.Control
+            type="text"
+            required
+            value={HPC}
+            onChange={e => setHPC(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>MoI</Form.Label>
+          <Form.Control
+            type="text"
+            value={MoI}
+            onChange={e => setMoI(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>DnV</Form.Label>
+          <Form.Control
+            type="text"
+            value={DnV}
+            onChange={e => setDnV(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Clinic note</Form.Label>
+          <Form.Control
+            type="text"
+            value={clinicNote}
+            onChange={e => setClinicNote(e.target.value)}
+            required
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Diagnosis type</Form.Label>
+          <Form.Control
+            type="text"
+            value={diagnosisType}
+            onChange={e => setDiagnosisType(e.target.value)}
+            required
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Current clinical status</Form.Label>
+          <Form.Control
+            type="text"
+            value={currentClinicalStatus}
+            onChange={e => setCurrentClinicalStatus(e.target.value)}
+            required
+          />
+        </Form.Group>
+        <Mutation
+          mutation={ADD_PATIENT_CASE_MUTATION}
+          variables={{
+            patientId,
+            mpId: String(id),
+            selectedIcdCodeID,
+            selectedIcdSubCodeID,
+            selectedHospitalId,
+            HPC,
+            MoI,
+            DnV,
+            clinicNote,
+            diagnosisType,
+            currentClinicalStatus
+          }}
+          onCompleted={res => {
+            console.log(res);
+            history.push(`/add/record/${patientId}/${res.addPatientCase.id}`);
+          }}
+          onError={err => console.error(err)}
+        >
+          {addPatientCase => (
+            <Button onClick={addPatientCase} variant="primary" type="submit">
+              Add Patient Case
+            </Button>
+          )}
+        </Mutation>
+      </Form>
+    </>
+  );
+};
+
+export default withRouter(withApollo(AddPatientCase));
