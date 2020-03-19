@@ -233,10 +233,29 @@ const PatientDetails = ({ match, client, history }) => {
 
 export default withRouter(withApollo(PatientDetails));
 
+const EntityDiv = ({ children, onClick }) => {
+  return (
+    <div
+      style={{
+        border: '1px solid black',
+        borderRadius: '5px',
+        margin: '5px',
+        padding: '5px',
+        cursor: 'pointer'
+      }}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};
+
 // message header
 const MSHMessage = ({ version, countryCode, language }) => {
   return (
-    <p>{`MSH | ^ ~ \\ & | | | | | ${Date.now()} | | | | | ${version} | | | | | ${countryCode} | | ${language}`}</p>
+    <EntityDiv>
+      <p>{`MSH | ^ ~ \\ & | | | | | ${Date.now()} | | | | | ${version} | | | | | ${countryCode} | | ${language}`}</p>
+    </EntityDiv>
   );
 };
 
@@ -260,12 +279,16 @@ const PIDMessage = ({ patientDetails }) => {
     birthPlace
   } = patientDetails;
   return (
-    <p>{`PID | ${id} | | | | ${lastName}^${firstName}^${middleName} | ${motherName} | ${dob} | ${sex} | | | ${address} | ${countryCode} | ${contact1} | ${contact2} | ${primaryLanguage} | ${maritalStatus} | ${religion} | | | | | ${birthPlace} | |  | ${countryCode} | | ${countryCode}`}</p>
+    <EntityDiv>
+      <p>{`PID | ${id} | | | | ${lastName}^${firstName}^${middleName} | ${motherName} | ${dob} | ${sex} | | | ${address} | ${countryCode} | ${contact1} | ${contact2} | ${primaryLanguage} | ${maritalStatus} | ${religion} | | | | | ${birthPlace} | |  | ${countryCode} | | ${countryCode}`}</p>
+    </EntityDiv>
   );
 };
 
 // care provider
 const NK1Message = ({ careProvider }) => {
+  const [showDetails, setShowDetails] = useState(false);
+
   const {
     firstName,
     lastName,
@@ -276,7 +299,19 @@ const NK1Message = ({ careProvider }) => {
     countryCode
   } = careProvider;
   return (
-    <p>{`NK1 | ${lastName}^${firstName}^${middleName} | | ${address} | ${contact1} | ${email} | | | | | | | | | | | | | ${countryCode} | | | | | | | | ${countryCode} | | | | | | | | | | `}</p>
+    <>
+      <EntityDiv onClick={() => setShowDetails(!showDetails)}>
+        <p>{`NK1 | ${lastName}^${firstName}^${middleName} | | ${address} | ${contact1} | ${email} | | | | | | | | | | | | | ${countryCode} | | | | | | | | ${countryCode} | | | | | | | | | | `}</p>
+      </EntityDiv>
+      <ul style={{ display: showDetails ? 'inherit' : 'none' }}>
+        {Object.keys(careProvider).map(
+          (key, i) =>
+            careProvider[key] && (
+              <li key={i}>{`${key}: ${careProvider[key]}`}</li>
+            )
+        )}
+      </ul>
+    </>
   );
 };
 
@@ -289,7 +324,9 @@ const DG1Message = ({ patientCase }) => {
     mp
   } = patientCase;
   return (
-    <p>{`DG1 | ${id} | ICD | ${icdCode} - ${icdSubCode} | | | | | | | | | | | | | ${mp.id}`}</p>
+    <EntityDiv>
+      <p>{`DG1 | ${id} | ICD | ${icdCode} - ${icdSubCode} | | | | | | | | | | | | | ${mp.id}`}</p>
+    </EntityDiv>
   );
 };
 
@@ -309,7 +346,7 @@ const EVNMessage = ({ record }) => {
     files
   } = record;
   return (
-    <>
+    <EntityDiv>
       <p>{`EVN | ADT | ${Date.now()} | | | | ${eventType}`}</p>
       <p>{`OBX | ${id} | | 1 | | ${cevsSp} | mm of Hg | | | | | | | | '${encounterDate}' UTC`}</p>
       <p>{`OBX | ${id} | | 1 | | ${cevsDp} | mm of Hg | | | | | | | | '${encounterDate}' UTC`}</p>
@@ -319,7 +356,7 @@ const EVNMessage = ({ record }) => {
       <p>{`OBX | ${id} | | 1 | | ${ceWeight} | kg | | | | | | | | '${encounterDate}' UTC`}</p>
       <ul>
         {files.map(file => (
-          <li>
+          <li key={file.id}>
             {file.name}:{' '}
             <a href={file.url} target="_blank" rel="noopener noreferrer">
               {file.url}
@@ -327,6 +364,6 @@ const EVNMessage = ({ record }) => {
           </li>
         ))}
       </ul>
-    </>
+    </EntityDiv>
   );
 };

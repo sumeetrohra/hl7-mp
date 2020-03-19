@@ -9,6 +9,7 @@
     "apollo-boost": "^0.4.7",
     "apollo-link-context": "^1.0.19",
     "bootstrap": "^4.4.1",
+    "firebase": "^7.11.0",
     "graphql": "^14.6.0",
     "graphql-tag": "^2.10.3",
     "react": "^16.13.0",
