@@ -125,6 +125,7 @@ const PatientDetails = ({ match, client, history }) => {
           records {
             id
             visitNo
+            eventType
             encounterDate
             mp {
               id
@@ -151,6 +152,11 @@ const PatientDetails = ({ match, client, history }) => {
             advice
             query
             followUpObservation
+            files {
+              id
+              name
+              url
+            }
           }
         }
       }
@@ -292,22 +298,35 @@ const DG1Message = ({ patientCase }) => {
 const EVNMessage = ({ record }) => {
   const {
     id,
+    eventType,
     encounterDate,
     cevsSp,
     cevsDp,
     cePr,
     ceRr,
     ceHeight,
-    ceWeight
+    ceWeight,
+    files
   } = record;
   return (
     <>
+      <p>{`EVN | ADT | ${Date.now()} | | | | ${eventType}`}</p>
       <p>{`OBX | ${id} | | 1 | | ${cevsSp} | mm of Hg | | | | | | | | '${encounterDate}' UTC`}</p>
       <p>{`OBX | ${id} | | 1 | | ${cevsDp} | mm of Hg | | | | | | | | '${encounterDate}' UTC`}</p>
       <p>{`OBX | ${id} | | 1 | | ${cePr} | beats per minute | | | | | | | | '${encounterDate}' UTC`}</p>
       <p>{`OBX | ${id} | | 1 | | ${ceRr} | breaths per minute | | | | | | | | '${encounterDate}' UTC`}</p>
       <p>{`OBX | ${id} | | 1 | | ${ceHeight} | cm | | | | | | | | '${encounterDate}' UTC`}</p>
       <p>{`OBX | ${id} | | 1 | | ${ceWeight} | kg | | | | | | | | '${encounterDate}' UTC`}</p>
+      <ul>
+        {files.map(file => (
+          <li>
+            {file.name}:{' '}
+            <a href={file.url} target="_blank" rel="noopener noreferrer">
+              {file.url}
+            </a>
+          </li>
+        ))}
+      </ul>
     </>
   );
 };
