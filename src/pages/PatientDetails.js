@@ -3,11 +3,13 @@ import { withApollo } from 'react-apollo';
 import gql from 'graphql-tag';
 import { Button } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
+import saveAs from 'save-as';
 
 const PatientDetails = ({ match, client, history }) => {
   const { patientId } = match.params;
 
   const [patientDetails, setPatientDetails] = useState(null);
+  const [textDetails, setTextDetails] = useState('');
 
   useEffect(() => {
     async function getPatientQuery() {
@@ -20,6 +22,25 @@ const PatientDetails = ({ match, client, history }) => {
     }
     getPatientQuery();
   });
+
+  useEffect(() => {
+    if (patientDetails) {
+      const detailsDiv = document.querySelector('#hl7-data');
+      setTextDetails(detailsDiv.innerText);
+    }
+  }, [patientDetails]);
+
+  const handleDownload = () => {
+    if (textDetails) {
+      var blob = new Blob([textDetails], {
+        type: 'text/plain;charset=utf-8'
+      });
+      saveAs(
+        blob,
+        `${patientDetails.firstName}_${patientDetails.lastName}.txt`
+      );
+    }
+  };
 
   const GET_PATIENT_QUERY = gql`
     query getPatient($patientId: String!) {
@@ -143,42 +164,44 @@ const PatientDetails = ({ match, client, history }) => {
 
   return (
     <>
-      <h3>Patient Details</h3>
+      <div id="hl7-data">
+        <h3>Patient Details</h3>
 
-      {patientDetails && (
-        <>
-          <MSHMessage
-            version="2.5"
-            countryCode={patientDetails.countryCode}
-            language="English"
-          />
-          <PIDMessage patientDetails={patientDetails} />
-        </>
-      )}
-      {patientDetails &&
-        patientDetails.patientCase &&
-        records.length > 0 &&
-        records.map((record, index) => (
-          <EVNMessage key={index} record={record} />
-        ))}
-      {patientDetails && patientDetails.careProvider ? (
-        <NK1Message careProvider={patientDetails.careProvider} />
-      ) : null}
+        {patientDetails && (
+          <>
+            <MSHMessage
+              version="2.5"
+              countryCode={patientDetails.countryCode}
+              language="English"
+            />
+            <PIDMessage patientDetails={patientDetails} />
+          </>
+        )}
+        {patientDetails &&
+          patientDetails.patientCase &&
+          records.length > 0 &&
+          records.map((record, index) => (
+            <EVNMessage key={index} record={record} />
+          ))}
+        {patientDetails && patientDetails.careProvider ? (
+          <NK1Message careProvider={patientDetails.careProvider} />
+        ) : null}
+        {patientDetails && patientDetails.patientCase && (
+          <DG1Message patientCase={patientDetails.patientCase} />
+        )}
+      </div>
       {patientDetails && !patientDetails.patientCase ? (
-        <Button
-          type="button"
-          variant="primary"
-          onClick={() => history.push(`/add/case/${patientDetails.id}`)}
-        >
-          Add Patient Case
-        </Button>
+        <>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => history.push(`/add/case/${patientDetails.id}`)}
+          >
+            Add Patient Case
+          </Button>
+        </>
       ) : (
         patientDetails && (
-          <DG1Message patientCase={patientDetails.patientCase} />
-        )
-      )}
-      {patientDetails && patientDetails.patientCase ? (
-        <>
           <Button
             type="button"
             variant="primary"
@@ -190,8 +213,14 @@ const PatientDetails = ({ match, client, history }) => {
           >
             Add Patient Record
           </Button>
+        )
+      )}
+      {'  '}
+      {patientDetails && (
+        <>
+          <Button onClick={handleDownload}>Download</Button>
         </>
-      ) : null}
+      )}
     </>
   );
 };
