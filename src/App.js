@@ -29,7 +29,9 @@ function App() {
 
   const { authState } = useContext(AuthContext);
 
-  const httpLink = createHttpLink({ uri: 'https://hl7-node.herokuapp.com/' });
+  const httpLink = createHttpLink({
+    uri: process.env.REACT_APP_BACKEND_ENDPOINT
+  });
 
   const authLink = setContext((_, { headers }) => {
     const { token } = authState;
