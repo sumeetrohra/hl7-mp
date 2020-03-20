@@ -11,6 +11,7 @@ import AddNewPatient from './pages/AddNewPatient';
 import AddPatientCase from './pages/AddPatientCase';
 import AddPatientRecord from './pages/AddPatientRecord';
 import PatientDetails from './pages/PatientDetails';
+import AddPatientRecordFile from './pages/AddPatientRecordFile';
 
 const Router = () => {
   const { authState, authDispatch } = useContext(AuthContext);
@@ -40,6 +41,11 @@ const Router = () => {
           />
           <Route exact path="/search" component={SearchPatients} />
           <Route exact path="/patient/:patientId" component={PatientDetails} />
+          <Route
+            exact
+            path="/add/file/:patientId/:patientRecordId"
+            component={AddPatientRecordFile}
+          />
           <Route path="*" render={() => <Redirect to="/" />} />
         </>
       ) : (

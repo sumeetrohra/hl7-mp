@@ -11,6 +11,7 @@ import { GET_HOSPITALS_QUERY } from './AddPatientCase';
 const AddPatientRecord = ({ match, client, history }) => {
   const [hospitals, setHospitals] = useState([]);
 
+  const [eventType, setEventType] = useState('');
   const [selectedHospitalId, setSelectedHospitalId] = useState('');
   const [observation, setObservation] = useState('');
   const [Tx, setTx] = useState('');
@@ -51,6 +52,7 @@ const AddPatientRecord = ({ match, client, history }) => {
       $patientCaseId: String!
       $mpId: String!
       $hospitalId: String!
+      $eventType: String!
       $observation: String!
       $Tx: String!
       $suggesstions: String
@@ -70,6 +72,7 @@ const AddPatientRecord = ({ match, client, history }) => {
         patientCaseId: $patientCaseId
         mpId: $mpId
         hospitalId: $hospitalId
+        eventType: $eventType
         observation: $observation
         Tx: $Tx
         suggesstions: $suggesstions
@@ -97,6 +100,19 @@ const AddPatientRecord = ({ match, client, history }) => {
     <>
       <h3>Add Patient Record</h3>
       <Form onSubmit={e => e.preventDefault()}>
+        <Form.Group>
+          <Form.Label>Event Type</Form.Label>
+          <Form.Control
+            as="select"
+            required
+            onChange={e => setEventType(e.target.value)}
+          >
+            <option>Select one...</option>
+            <option value={'Admit'}>Admit</option>
+            <option value={'Discharge'}>Discharge</option>
+            <option value={'Transfer'}>Transfer</option>
+          </Form.Control>
+        </Form.Group>
         <Form.Group>
           <Form.Label>Hospital</Form.Label>
           <Form.Control
@@ -236,6 +252,7 @@ const AddPatientRecord = ({ match, client, history }) => {
             patientCaseId,
             mpId: id,
             hospitalId: selectedHospitalId,
+            eventType,
             observation,
             Tx,
             suggesstions: suggestions,
@@ -252,7 +269,10 @@ const AddPatientRecord = ({ match, client, history }) => {
           }}
           onCompleted={res => {
             console.log(res);
-            history.push(`/patient/${patientId}`);
+            const records = res.addPatientRecord.records;
+            history.push(
+              `/add/file/${patientId}/${records[records.length - 1].id}`
+            );
           }}
           onError={err => console.error(err)}
         >

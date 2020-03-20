@@ -188,7 +188,12 @@ const PatientDetails = ({ match, client, history }) => {
           patientDetails.patientCase &&
           records.length > 0 &&
           records.map((record, index) => (
-            <EVNMessage key={index} record={record} />
+            <EVNMessage
+              key={index}
+              record={record}
+              patientId={patientDetails.id}
+              history={history}
+            />
           ))}
         {patientDetails && patientDetails.careProvider ? (
           <NK1Message careProvider={patientDetails.careProvider} />
@@ -361,7 +366,7 @@ const DG1Message = ({ patientCase }) => {
 };
 
 // records
-const EVNMessage = ({ record }) => {
+const EVNMessage = ({ record, patientId, history }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const {
@@ -388,32 +393,31 @@ const EVNMessage = ({ record }) => {
         <p>{`OBX | ${id} | | 1 | | ${ceRr} | breaths per minute | | | | | | | | '${encounterDate}' UTC`}</p>
         <p>{`OBX | ${id} | | 1 | | ${ceHeight} | cm | | | | | | | | '${encounterDate}' UTC`}</p>
         <p>{`OBX | ${id} | | 1 | | ${ceWeight} | kg | | | | | | | | '${encounterDate}' UTC`}</p>
-        <p>Files:</p>
-        <ul>
-          {files.map(file => (
-            <li key={file.id}>
-              {file.name}:{' '}
-              <a href={file.url} target="_blank" rel="noopener noreferrer">
-                {file.url}
-              </a>
-            </li>
-          ))}
-        </ul>
       </EntityDiv>
       <ul style={{ display: showDetails ? 'inherit' : 'none' }}>
         {GetEntityDetails({ ...record, mp: mp.mpId, hospital: hospital.id })}
-        <li>Files:</li>
-        <ul>
-          {files.map(file => (
-            <li key={file.id}>
-              {file.name}:{' '}
-              <a href={file.url} target="_blank" rel="noopener noreferrer">
-                {file.url}
-              </a>
-            </li>
-          ))}
-        </ul>
+        {files.length > 0 && (
+          <>
+            <li>Files:</li>
+            <ul>
+              {files.map(file => (
+                <li key={file.id}>
+                  {file.name}:{' '}
+                  <a href={file.url} target="_blank" rel="noopener noreferrer">
+                    {file.url}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </ul>
+      <Button
+        style={{ display: showDetails ? 'inherit' : 'none' }}
+        onClick={() => history.push(`/add/file/${patientId}/${id}`)}
+      >
+        Add File
+      </Button>
     </>
   );
 };
