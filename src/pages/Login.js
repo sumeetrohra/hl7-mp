@@ -88,6 +88,15 @@ const LoginPage = ({ history }) => {
           </Button>
         )}
       </Mutation>
+      <hr />
+      <p>Not Medical Practitioner?</p>
+      <Button as="a" href="https://hl7-admin.netlify.com">
+        Go To Admin Page
+      </Button>
+      {'  '}
+      <Button as="a" href="https://hl7-patient.netlify.com">
+        Go To Patient Page
+      </Button>
     </Form>
   );
 };
