@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { withApollo } from 'react-apollo';
-import gql from 'graphql-tag';
-import { Button } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import saveAs from 'save-as';
+import firebase from 'firebase/app';
+import 'firebase/storage';
+
+import { validateEmail } from '../utils';
+import { GET_PATIENT_QUERY } from './getPatientQuery';
 
 const PatientDetails = ({ match, client, history }) => {
   const { patientId } = match.params;
 
   const [patientDetails, setPatientDetails] = useState(null);
   const [textDetails, setTextDetails] = useState('');
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     async function getPatientQuery() {
@@ -42,131 +47,29 @@ const PatientDetails = ({ match, client, history }) => {
     }
   };
 
-  const GET_PATIENT_QUERY = gql`
-    query getPatient($patientId: String!) {
-      getPatient(patientId: $patientId) {
-        id
-        lastName
-        firstName
-        middleName
-        motherName
-        dob
-        bloodGroup
-        sex
-        religion
-        maritalStatus
-        primaryLanguage
-        birthPlace
-        address
-        countryCode
-        occupation
-        contact1
-        contact2
-        email
-        socioEconomicStatus
-        immunizationStatus
-        allergyStatus
-        organDonorStatus
-        PMH
-        DHx
-        Ca
-        IDDM
-        NIDDM
-        MI
-        AF
-        registeredAt
-        careProvider {
-          firstName
-          lastName
-          middleName
-          address
-          cityId
-          pinCode
-          countryCode
-          contact1
-          email
-        }
-        insurance {
-          id
-          status
-          companyName
-        }
-        patientCase {
-          id
-          mp {
-            id
-            mpId
-            lastName
-            firstName
-            middleName
-            email
-          }
-          icdCode {
-            id
-            icdCode
-            commonName
-          }
-          icdSubCode {
-            id
-            icdSubCode
-            scientificName
-          }
-          hospital {
-            id
-            name
-          }
-          HPC
-          MoI
-          DnV
-          clinicNote
-          diagnosisType
-          currentClinicalStatus
-          createdAt
-          records {
-            id
-            visitNo
-            eventType
-            encounterDate
-            mp {
-              id
-              mpId
-              lastName
-              firstName
-              middleName
-              email
-            }
-            hospital {
-              id
-              name
-            }
-            observation
-            Tx
-            suggesstions
-            cevsSp
-            cevsDp
-            cePr
-            ceRr
-            ceHeight
-            ceWeight
-            medication
-            advice
-            query
-            followUpObservation
-            files {
-              id
-              name
-              url
-            }
-          }
-        }
-      }
-    }
-  `;
-
   const records =
     patientDetails && patientDetails.patientCase
       ? patientDetails.patientCase.records
       : null;
+
+  const handleEmailShare = async () => {
+    if (textDetails) {
+      var blob = new Blob([textDetails], {
+        type: 'text/plain;charset=utf-8'
+      });
+      const storageRef = firebase
+        .storage()
+        .ref()
+        .child(`${patientId}_${Date.now()}`);
+      const snapshot = await storageRef.put(blob);
+      const fileUrl = await snapshot.ref.getDownloadURL();
+      console.log(fileUrl);
+      const { firstName, lastName } = patientDetails;
+      window.open(
+        `mailto:${email}?subject=HL7 reports for ${firstName} ${lastName}&body=HL7 file can be found at this url: ${fileUrl}`
+      );
+    }
+  };
 
   return (
     <>
@@ -231,6 +134,25 @@ const PatientDetails = ({ match, client, history }) => {
       {patientDetails && (
         <>
           <Button onClick={handleDownload}>Download</Button>
+          {'  '}
+          <Form onSubmit={e => e.preventDefault()}>
+            <Form.Group>
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </Form.Group>
+          </Form>
+          <Button
+            onClick={handleEmailShare}
+            style={{ opacity: validateEmail(email) ? 1 : 0.7 }}
+            disabled={validateEmail(email) ? false : true}
+          >
+            Share with Email
+          </Button>
         </>
       )}
     </>
@@ -267,9 +189,27 @@ const MSHMessage = ({ version, countryCode, language, date }) => {
   );
 };
 
+const getFlatObject = (object, inputKey) => {
+  if (object[inputKey]) {
+    const careProviderDetails = Object.keys(object[inputKey]).reduce(
+      (acc, key) => {
+        acc = { ...acc, [`${inputKey}_${key}`]: object[inputKey][key] };
+        return acc;
+      },
+      {}
+    );
+    return careProviderDetails;
+  }
+};
+
 const GetEntityDetails = object => {
+  object = {
+    ...object,
+    ...getFlatObject(object, 'careProvider'),
+    ...getFlatObject(object, 'insurance')
+  };
   return Object.keys(object)
-    .filter(key => key !== '__typename')
+    .filter(key => !key.match('_typename'))
     .filter(
       key =>
         object[key] === null || (object[key] && typeof object[key] !== 'object')
@@ -280,7 +220,6 @@ const GetEntityDetails = object => {
 // patient details
 const PIDMessage = ({ patientDetails }) => {
   const [showDetails, setShowDetails] = useState(false);
-  console.log(patientDetails);
 
   const {
     id,
@@ -305,7 +244,7 @@ const PIDMessage = ({ patientDetails }) => {
         <p>{`PID | ${id} | | | | ${lastName}^${firstName}^${middleName} | ${motherName} | ${dob} | ${sex} | | | ${address} | ${countryCode} | ${contact1} | ${contact2} | ${primaryLanguage} | ${maritalStatus} | ${religion} | | | | | ${birthPlace} | |  | ${countryCode} | | ${countryCode}`}</p>
       </EntityDiv>
       <ul style={{ display: showDetails ? 'inherit' : 'none' }}>
-        {GetEntityDetails(patientDetails)}
+        {GetEntityDetails({ ...patientDetails })}
       </ul>
     </>
   );
@@ -339,11 +278,12 @@ const NK1Message = ({ careProvider }) => {
 // patient case
 const DG1Message = ({ patientCase }) => {
   const [showDetails, setShowDetails] = useState(false);
+  console.log(patientCase);
 
   const {
     id,
     icdCode: { icdCode },
-    icdSubCode: { icdSubCode },
+    icdSubCode: { icdSubCode, scientificName },
     mp,
     hospital
   } = patientCase;
@@ -357,6 +297,7 @@ const DG1Message = ({ patientCase }) => {
           ...patientCase,
           icdCode: icdCode.icdCode,
           icdSubCode: icdSubCode.icdSubCode,
+          scientificName,
           mp: mp.mpId,
           hospital: hospital.id
         })}
