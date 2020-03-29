@@ -8,6 +8,7 @@ import 'firebase/storage';
 
 import { validateEmail } from '../utils';
 import { GET_PATIENT_QUERY } from './getPatientQuery';
+import Spinner from '../components/Spinner';
 
 const PatientDetails = ({ match, client, history }) => {
   const { patientId } = match.params;
@@ -74,7 +75,7 @@ const PatientDetails = ({ match, client, history }) => {
   return (
     <>
       <div id="hl7-data">
-        <h3>Patient Details</h3>
+        {patientDetails ? <h3>Patient Details</h3> : <Spinner />}
 
         {patientDetails && (
           <>

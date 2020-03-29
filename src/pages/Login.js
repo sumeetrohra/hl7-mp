@@ -5,6 +5,8 @@ import { Mutation } from 'react-apollo';
 
 import { SET_MP } from '../constants';
 import { AuthContext } from '../AuthConfig';
+import Spinner from '../components/Spinner';
+import { validateEmail } from '../utils';
 
 const LoginPage = ({ history }) => {
   const handleSubmit = event => {
@@ -47,10 +49,13 @@ const LoginPage = ({ history }) => {
       type: SET_MP,
       payload: data.medicalPractitionerLogin
     });
+    setLoading(false);
   };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -76,15 +81,37 @@ const LoginPage = ({ history }) => {
           onChange={e => setPassword(e.target.value)}
         />
       </Form.Group>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <Mutation
         mutation={MP_LOGIN_MUTATION}
         variables={{ email, password }}
         onCompleted={data => _onLogin(data)}
-        onError={err => console.error(err)}
+        onError={err => {
+          setError('Invalid email or password');
+          setLoading(false);
+        }}
       >
-        {mutation => (
-          <Button variant="primary" type="submit" onClick={mutation}>
-            Submit
+        {medicalPractitionerLogin => (
+          <Button
+            variant="primary"
+            type="submit"
+            style={{ opacity: loading ? 0.7 : 1 }}
+            disabled={loading ? true : false}
+            onClick={() => {
+              setError();
+              setLoading(true);
+              if (validateEmail(email) && password) {
+                medicalPractitionerLogin();
+              } else if (!validateEmail(email)) {
+                setError('Email is not valid');
+                setLoading(false);
+              } else {
+                setError('Email or password invalid');
+                setLoading(false);
+              }
+            }}
+          >
+            {loading ? <Spinner /> : 'Login'}
           </Button>
         )}
       </Mutation>
