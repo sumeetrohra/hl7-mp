@@ -1,9 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import firebase from 'firebase/app';
 import 'firebase/storage';
 import gql from 'graphql-tag';
 import { withApollo } from 'react-apollo';
-import { Button } from 'react-bootstrap';
+import { Form, Button } from 'react-bootstrap';
+
+import Spinner from '../components/Spinner';
 
 const AddPatientRecordFile = ({ match, client }) => {
   const { patientId, patientRecordId } = match.params;
@@ -12,8 +15,13 @@ const AddPatientRecordFile = ({ match, client }) => {
   const [oldFiles, setOldFiles] = useState([]);
   const [fileName, setFileName] = useState('');
 
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+
   useEffect(() => {
     async function getPatientQuery() {
+      setLoadingFiles(true);
       try {
         const result = await client.query({
           query: GET_PATIENT_RECORD_FILES_QUERY,
@@ -31,10 +39,13 @@ const AddPatientRecordFile = ({ match, client }) => {
         if (files.length > 0) {
           setOldFiles(files);
         }
-      } catch (err) {}
+      } catch (err) {
+      } finally {
+        setLoadingFiles(false);
+      }
     }
     getPatientQuery();
-  });
+  }, [oldFiles]);
 
   const GET_PATIENT_RECORD_FILES_QUERY = gql`
     query getPatient($patientId: String!) {
@@ -79,54 +90,89 @@ const AddPatientRecordFile = ({ match, client }) => {
   `;
 
   const uploadFile = async () => {
-    const storageRef = firebase
-      .storage()
-      .ref()
-      .child(`${patientId}_${patientRecordId}_${Date.now()}`);
-    const snapshot = await storageRef.put(file);
-    const fileUrl = await snapshot.ref.getDownloadURL();
-    const result = await client.mutate({
-      mutation: ADD_FILE_MUTATION,
-      variables: { patientId, patientRecordId, fileName, fileUrl },
-      fetchPolicy: 'no-cache'
-    });
-    console.log(result);
-    setOldFiles(result.data.addPatientRecordFile.files);
-    setFileName('');
-    setFile();
+    setError();
+    setLoading(true);
+    try {
+      const storageRef = firebase
+        .storage()
+        .ref()
+        .child(`${patientId}_${patientRecordId}_${Date.now()}`);
+      const snapshot = await storageRef.put(file);
+      const fileUrl = await snapshot.ref.getDownloadURL();
+      const result = await client.mutate({
+        mutation: ADD_FILE_MUTATION,
+        variables: { patientId, patientRecordId, fileName, fileUrl },
+        fetchPolicy: 'no-cache'
+      });
+      setOldFiles(result.data.addPatientRecordFile.files);
+      setFileName('');
+      setFile();
+    } catch (err) {
+      setError('Some error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
-  console.log(file);
 
   return (
     <>
-      {oldFiles.length > 0 && (
+      {!loadingFiles ? (
+        oldFiles.length > 0 && (
+          <>
+            <h3>Files:</h3>
+            <ul>
+              {oldFiles.map(file => (
+                <li key={file.id}>
+                  {file.name}:{' '}
+                  <a href={file.url} target="_blank" rel="noopener noreferrer">
+                    {file.url}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      ) : (
         <>
-          <p>Files:</p>
-          <ul>
-            {oldFiles.map(file => (
-              <li key={file.id}>
-                {file.name}:{' '}
-                <a href={file.url} target="_blank" rel="noopener noreferrer">
-                  {file.url}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <p>Loading Files</p>
+          <Spinner />
+          <br />
         </>
       )}
-      <input
-        type="text"
-        value={fileName}
-        onChange={e => setFileName(e.target.value)}
-        placeholder="file name"
-      />
-      <input
-        type="file"
-        onChange={e => {
-          setFile(e.target.files[0]);
-        }}
-      />
-      {file && fileName && <Button onClick={uploadFile}>Upload</Button>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <Form>
+        <Form.Group>
+          <Form.Label>File Name</Form.Label>
+          <Form.Control
+            type="text"
+            value={fileName}
+            onChange={e => {
+              setError();
+              setFileName(e.target.value);
+            }}
+            placeholder="file name"
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Control
+            type="file"
+            onChange={e => {
+              setError();
+              setFile(e.target.files[0]);
+            }}
+          />
+        </Form.Group>
+      </Form>
+
+      {file && fileName && (
+        <Button
+          onClick={uploadFile}
+          style={{ opacity: loading ? 0.7 : 1 }}
+          disabled={loading ? true : false}
+        >
+          {loading ? <Spinner /> : 'Upload'}
+        </Button>
+      )}
     </>
   );
 };

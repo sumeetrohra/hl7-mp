@@ -4,12 +4,15 @@ import { Mutation } from 'react-apollo';
 import { Card, Button, Toast } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 
+import Spinner from '../components/Spinner';
+
 const PatientCard = ({
   patient: { firstName, lastName, email, id },
   accessible,
   history
 }) => {
   const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const ASK_ACCESS_MUTATION = gql`
     mutation requestPatientAccess($id: String!) {
@@ -33,13 +36,24 @@ const PatientCard = ({
             variables={{ id }}
             onCompleted={res => {
               console.log(res);
+              setLoading(false);
               setShowToast(true);
             }}
-            onError={err => console.error(err)}
+            onError={err => {
+              setLoading(false);
+            }}
           >
             {requestPatientAccess => (
-              <Button variant="primary" onClick={requestPatientAccess}>
-                Ask Access
+              <Button
+                variant="primary"
+                style={{ opacity: loading ? 0.7 : 1 }}
+                disabled={loading ? true : false}
+                onClick={() => {
+                  setLoading(true);
+                  requestPatientAccess();
+                }}
+              >
+                {loading ? <Spinner /> : 'Ask Access'}
               </Button>
             )}
           </Mutation>

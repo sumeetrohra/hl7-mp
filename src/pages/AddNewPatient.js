@@ -4,6 +4,9 @@ import gql from 'graphql-tag';
 import { Mutation } from 'react-apollo';
 import { withRouter } from 'react-router-dom';
 
+import Spinner from '../components/Spinner';
+import { validateEmail, validatePhoneNumber } from '../utils';
+
 const AddNewPatient = ({ history }) => {
   const [fName, setFName] = useState('');
   const [lName, setLName] = useState('');
@@ -34,6 +37,9 @@ const AddNewPatient = ({ history }) => {
   const [NIDDM, setNIDDM] = useState('');
   const [MI, setMI] = useState('');
   const [AF, setAF] = useState('');
+
+  const [error, setError] = useState('adshdjfvasdjvfg');
+  const [loading, setLoading] = useState(false);
 
   const CREATE_PATIENT_MUTATION = gql`
     mutation addPatient(
@@ -139,7 +145,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={fName}
           onChange={e => setFName(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -148,7 +153,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={midName}
           onChange={e => setMidName(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -157,7 +161,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={lName}
           onChange={e => setLName(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -166,7 +169,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={motherName}
           onChange={e => setMotherName(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -176,7 +178,6 @@ const AddNewPatient = ({ history }) => {
           placeholder="Enter email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -184,7 +185,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           value={password}
           onChange={e => setPassword(e.target.value)}
-          required
           type="password"
           placeholder="Password"
         />
@@ -195,7 +195,6 @@ const AddNewPatient = ({ history }) => {
           type="date"
           value={dob}
           onChange={e => setDob(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -203,7 +202,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           as="select"
           value={bg}
-          required
           onChange={e => setBg(e.target.value)}
         >
           <option>Select one...</option>
@@ -222,7 +220,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Label>Sex</Form.Label>
         <Form.Control
           as="select"
-          required
           value={sex}
           onChange={e => setSex(e.target.value)}
         >
@@ -236,7 +233,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Label>Religion</Form.Label>
         <Form.Control
           type="text"
-          required
           value={religion}
           onChange={e => setReligion(e.target.value)}
         />
@@ -245,7 +241,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Label>Marital Status</Form.Label>
         <Form.Control
           as="select"
-          required
           value={maritalStatus}
           onChange={e => setMaritalStatus(e.target.value)}
         >
@@ -261,7 +256,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={primaryLanguage}
           onChange={e => setPrimaryLanguage(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -270,7 +264,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={birthPlace}
           onChange={e => setBirthPlace(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -279,7 +272,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={address}
           onChange={e => setAddress(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -288,7 +280,6 @@ const AddNewPatient = ({ history }) => {
           type="number"
           value={countryCode}
           onChange={e => setCountryCode(Number(e.target.value))}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -297,7 +288,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={occupation}
           onChange={e => setOccupation(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -306,7 +296,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={contact1}
           onChange={e => setContact1(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -315,7 +304,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={contact2}
           onChange={e => setContact2(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -324,7 +312,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={socioEconomicStatus}
           onChange={e => setSocioEconomicStatus(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -333,7 +320,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={immunizationStatus}
           onChange={e => setImmunizationStatus(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -342,7 +328,6 @@ const AddNewPatient = ({ history }) => {
           as="select"
           value={allergyStatus}
           onChange={e => setAllergyStatus(Boolean(e.target.value))}
-          required
         >
           <option>Select one...</option>
           <option value={true}>Yes</option>
@@ -355,7 +340,6 @@ const AddNewPatient = ({ history }) => {
           as="select"
           value={organDonorStatus}
           onChange={e => setOrganDonorStatus(Boolean(e.target.value))}
-          required
         >
           <option>Select one...</option>
           <option value={true}>Yes</option>
@@ -368,7 +352,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={PMH}
           onChange={e => setPMH(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -377,7 +360,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={DHx}
           onChange={e => setDHx(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -386,7 +368,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={Ca}
           onChange={e => setCa(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -394,7 +375,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={IDDM}
-          required
           onChange={e => setIDDM(e.target.value)}
         />
       </Form.Group>
@@ -404,7 +384,6 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={NIDDM}
           onChange={e => setNIDDM(e.target.value)}
-          required
         />
       </Form.Group>
       <Form.Group>
@@ -412,7 +391,6 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={MI}
-          required
           onChange={e => setMI(e.target.value)}
         />
       </Form.Group>
@@ -422,9 +400,9 @@ const AddNewPatient = ({ history }) => {
           type="text"
           value={AF}
           onChange={e => setAF(e.target.value)}
-          required
         />
       </Form.Group>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <Mutation
         mutation={CREATE_PATIENT_MUTATION}
         variables={{
@@ -459,15 +437,72 @@ const AddNewPatient = ({ history }) => {
           AF
         }}
         onCompleted={res => {
-          console.log(res);
+          setLoading(false);
           localStorage.setItem('newPat', JSON.stringify(res));
           history.push(`/add/case/${res.addPatient.id}`);
         }}
-        onError={err => console.error(err)}
+        onError={err => {
+          setError('Some error occurred');
+          setLoading(false);
+        }}
       >
         {addPatient => (
-          <Button onClick={addPatient} variant="primary" type="submit">
-            Add Patient
+          <Button
+            variant="primary"
+            type="submit"
+            style={{ opacity: loading ? 0.7 : 1 }}
+            disabled={loading ? true : false}
+            onClick={() => {
+              setError();
+              if (
+                lName &&
+                fName &&
+                midName &&
+                motherName &&
+                dob &&
+                bg &&
+                sex &&
+                religion &&
+                maritalStatus &&
+                primaryLanguage &&
+                birthPlace &&
+                address &&
+                countryCode &&
+                occupation &&
+                validatePhoneNumber(contact1) &&
+                validatePhoneNumber(contact2) &&
+                validateEmail(email) &&
+                password &&
+                socioEconomicStatus &&
+                immunizationStatus &&
+                allergyStatus &&
+                organDonorStatus &&
+                PMH &&
+                DHx &&
+                Ca &&
+                IDDM &&
+                NIDDM &&
+                MI &&
+                AF
+              ) {
+                setLoading(true);
+                addPatient();
+              } else if (!validateEmail(email)) {
+                setError('Please enter valid email address');
+                setLoading(false);
+              } else if (
+                !validatePhoneNumber(contact1) ||
+                !validatePhoneNumber(contact2)
+              ) {
+                setError('Please enter valid phone number');
+                setLoading(false);
+              } else {
+                setError('All fields are required');
+                setLoading(false);
+              }
+            }}
+          >
+            {loading ? <Spinner /> : 'Add Patient'}
           </Button>
         )}
       </Mutation>

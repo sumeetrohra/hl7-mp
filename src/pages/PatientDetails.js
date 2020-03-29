@@ -75,7 +75,14 @@ const PatientDetails = ({ match, client, history }) => {
   return (
     <>
       <div id="hl7-data">
-        {patientDetails ? <h3>Patient Details</h3> : <Spinner />}
+        {patientDetails ? (
+          <h3>Patient Details</h3>
+        ) : (
+          <>
+            <p>Loading Patient Details...</p>
+            <Spinner />
+          </>
+        )}
 
         {patientDetails && (
           <>

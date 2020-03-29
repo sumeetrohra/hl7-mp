@@ -5,11 +5,13 @@ import { withApollo } from 'react-apollo';
 import { Form } from 'react-bootstrap';
 
 import PatientList from '../components/PatientList';
+import Spinner from '../components/Spinner';
 
 const Home = ({ client }) => {
   const [accessiblePatients, setAccessiblePatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const GET_ACCESSIBLE_PATIENTS_QUERY = gql`
     query getAccessiblePatients {
@@ -24,11 +26,17 @@ const Home = ({ client }) => {
 
   useEffect(() => {
     async function getPatients() {
-      const results = await client.query({
-        query: GET_ACCESSIBLE_PATIENTS_QUERY,
-        fetchPolicy: 'network-only'
-      });
-      setAccessiblePatients(results.data.getAccessiblePatients);
+      setLoading(true);
+      try {
+        const results = await client.query({
+          query: GET_ACCESSIBLE_PATIENTS_QUERY,
+          fetchPolicy: 'network-only'
+        });
+        setAccessiblePatients(results.data.getAccessiblePatients);
+      } catch (err) {
+      } finally {
+        setLoading(false);
+      }
     }
     getPatients();
   }, []);
@@ -52,7 +60,14 @@ const Home = ({ client }) => {
 
   return (
     <>
-      <h3>Accessible Patients</h3>
+      {!loading ? (
+        <h3>Accessible Patients</h3>
+      ) : (
+        <>
+          <p>Loading Patients...</p>
+          <Spinner />
+        </>
+      )}
       {accessiblePatients.length > 0 && (
         <Form onSubmit={e => e.preventDefault()}>
           <Form.Group controlId="formBasicEmail">

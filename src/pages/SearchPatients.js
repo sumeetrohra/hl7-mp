@@ -5,6 +5,7 @@ import { withApollo } from 'react-apollo';
 
 import { AuthContext } from '../AuthConfig';
 import PatientList from '../components/PatientList';
+import Spinner from '../components/Spinner';
 
 const SearchPatients = ({ client }) => {
   const { authState } = useContext(AuthContext);
@@ -14,6 +15,7 @@ const SearchPatients = ({ client }) => {
 
   const [email, setEmail] = useState('');
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const SEARCH_PATIENTS_QUERY = gql`
     query SearchPatients($email: String!) {
@@ -27,6 +29,8 @@ const SearchPatients = ({ client }) => {
   `;
 
   const handleSearch = async () => {
+    setLoading(true);
+    setResults([]);
     if (email) {
       const results = await client.query({
         query: SEARCH_PATIENTS_QUERY,
@@ -39,6 +43,7 @@ const SearchPatients = ({ client }) => {
       );
       setResults(filteredPatients);
     }
+    setLoading(false);
   };
 
   return (
@@ -53,8 +58,14 @@ const SearchPatients = ({ client }) => {
             value={email}
           />
         </Form.Group>
-        <Button variant="primary" type="submit" onClick={handleSearch}>
-          Submit
+        <Button
+          variant="primary"
+          type="submit"
+          style={{ opacity: loading ? 0.7 : 1 }}
+          disabled={loading ? true : false}
+          onClick={handleSearch}
+        >
+          {loading ? <Spinner /> : 'Search'}
         </Button>
       </Form>
       {results.length > 0 ? (

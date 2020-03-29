@@ -6,6 +6,7 @@ import { withApollo, Mutation } from 'react-apollo';
 import { withRouter } from 'react-router-dom';
 
 import { AuthContext } from '../AuthConfig';
+import Spinner from '../components/Spinner';
 
 export const GET_HOSPITALS_QUERY = gql`
   query getHospitals {
@@ -38,6 +39,9 @@ const AddPatientCase = ({ match, client, history }) => {
   const [clinicNote, setClinicNote] = useState('');
   const [diagnosisType, setDiagnosisType] = useState('');
   const [currentClinicalStatus, setCurrentClinicalStatus] = useState('');
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState();
 
   const GET_ICD_CODES_QUERY = gql`
     query getIcdCodes {
@@ -140,19 +144,25 @@ const AddPatientCase = ({ match, client, history }) => {
     <>
       <h3>Add Case</h3>
       <Form onSubmit={e => e.preventDefault()}>
-        <Form.Group>
-          <Form.Label>ICD code</Form.Label>
-          <Form.Control as="select" required onChange={handleSelectICDCode}>
-            <option>Select one...</option>
-            {icdCodes.length > 0 &&
-              icdCodes.map(({ icdCode, commonName, id }, i) => (
+        {icdCodes.length > 0 ? (
+          <Form.Group>
+            <Form.Label>ICD code</Form.Label>
+            <Form.Control as="select" required onChange={handleSelectICDCode}>
+              <option>Select one...</option>
+              {icdCodes.map(({ icdCode, commonName, id }, i) => (
                 <option
                   key={i}
                   value={id}
                 >{`Code: ${icdCode}, Name: ${commonName}`}</option>
               ))}
-          </Form.Control>
-        </Form.Group>
+            </Form.Control>
+          </Form.Group>
+        ) : (
+          <>
+            <p>Loading ICD Codes</p>
+            <Spinner />
+          </>
+        )}
         {filteredIcdSubCodes.length > 0 && (
           <Form.Group>
             <Form.Label>ICD sub code</Form.Label>
@@ -173,22 +183,29 @@ const AddPatientCase = ({ match, client, history }) => {
             </Form.Control>
           </Form.Group>
         )}
-        <Form.Group>
-          <Form.Label>Hospital</Form.Label>
-          <Form.Control
-            as="select"
-            required
-            onChange={e => setSelectedHospitalId(e.target.value)}
-          >
-            <option>Select one...</option>
-            {hospitals.length > 0 &&
-              hospitals.map(({ id, name }, i) => (
-                <option key={i} value={id}>
-                  {name}
-                </option>
-              ))}
-          </Form.Control>
-        </Form.Group>
+        {hospitals.length > 0 ? (
+          <Form.Group>
+            <Form.Label>Hospital</Form.Label>
+            <Form.Control
+              as="select"
+              required
+              onChange={e => setSelectedHospitalId(e.target.value)}
+            >
+              <option>Select one...</option>
+              {hospitals.length > 0 &&
+                hospitals.map(({ id, name }, i) => (
+                  <option key={i} value={id}>
+                    {name}
+                  </option>
+                ))}
+            </Form.Control>
+          </Form.Group>
+        ) : (
+          <>
+            <p>Loading hospitals</p>
+            <Spinner />
+          </>
+        )}
         <Form.Group>
           <Form.Label>HPC</Form.Label>
           <Form.Control
@@ -241,6 +258,7 @@ const AddPatientCase = ({ match, client, history }) => {
             required
           />
         </Form.Group>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         <Mutation
           mutation={ADD_PATIENT_CASE_MUTATION}
           variables={{
@@ -257,14 +275,44 @@ const AddPatientCase = ({ match, client, history }) => {
             currentClinicalStatus
           }}
           onCompleted={res => {
-            console.log(res);
+            setLoading(false);
             history.push(`/add/record/${patientId}/${res.addPatientCase.id}`);
           }}
-          onError={err => console.error(err)}
+          onError={err => {
+            setError('Some error occurred');
+            setLoading(false);
+          }}
         >
           {addPatientCase => (
-            <Button onClick={addPatientCase} variant="primary" type="submit">
-              Add Patient Case
+            <Button
+              variant="primary"
+              type="submit"
+              style={{ opacity: loading ? 0.7 : 1 }}
+              disabled={loading ? true : false}
+              onClick={() => {
+                setError();
+                if (
+                  patientId &&
+                  id &&
+                  selectedIcdCodeID &&
+                  selectedIcdSubCodeID &&
+                  selectedHospitalId &&
+                  HPC &&
+                  MoI &&
+                  DnV &&
+                  clinicNote &&
+                  diagnosisType &&
+                  currentClinicalStatus
+                ) {
+                  setLoading(true);
+                  addPatientCase();
+                } else {
+                  setError('All fields are required');
+                  setLoading(false);
+                }
+              }}
+            >
+              {loading ? <Spinner /> : 'Add Patient Case'}
             </Button>
           )}
         </Mutation>

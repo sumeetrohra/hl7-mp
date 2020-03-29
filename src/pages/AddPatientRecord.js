@@ -7,6 +7,7 @@ import { withRouter } from 'react-router-dom';
 
 import { AuthContext } from '../AuthConfig';
 import { GET_HOSPITALS_QUERY } from './AddPatientCase';
+import Spinner from '../components/Spinner';
 
 const AddPatientRecord = ({ match, client, history }) => {
   const [hospitals, setHospitals] = useState([]);
@@ -26,6 +27,9 @@ const AddPatientRecord = ({ match, client, history }) => {
   const [advice, setAdvice] = useState('');
   const [query, setQuery] = useState('');
   const [followUpObservation, setFollowUpObservation] = useState('');
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const {
     authState: {
@@ -113,22 +117,29 @@ const AddPatientRecord = ({ match, client, history }) => {
             <option value={'Transfer'}>Transfer</option>
           </Form.Control>
         </Form.Group>
-        <Form.Group>
-          <Form.Label>Hospital</Form.Label>
-          <Form.Control
-            as="select"
-            required
-            onChange={e => setSelectedHospitalId(e.target.value)}
-          >
-            <option>Select one...</option>
-            {hospitals.length > 0 &&
-              hospitals.map(({ id, name }, i) => (
-                <option key={i} value={id}>
-                  {name}
-                </option>
-              ))}
-          </Form.Control>
-        </Form.Group>
+        {hospitals.length > 0 ? (
+          <Form.Group>
+            <Form.Label>Hospital</Form.Label>
+            <Form.Control
+              as="select"
+              required
+              onChange={e => setSelectedHospitalId(e.target.value)}
+            >
+              <option>Select one...</option>
+              {hospitals.length > 0 &&
+                hospitals.map(({ id, name }, i) => (
+                  <option key={i} value={id}>
+                    {name}
+                  </option>
+                ))}
+            </Form.Control>
+          </Form.Group>
+        ) : (
+          <>
+            <p>Loading Hospitals</p>
+            <Spinner />
+          </>
+        )}
         <Form.Group>
           <Form.Label>observation</Form.Label>
           <Form.Control
@@ -245,6 +256,7 @@ const AddPatientRecord = ({ match, client, history }) => {
             onChange={e => setFollowUpObservation(e.target.value)}
           />
         </Form.Group>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
         <Mutation
           mutation={ADD_PATIENT_RECORD_MUTATION}
           variables={{
@@ -268,17 +280,54 @@ const AddPatientRecord = ({ match, client, history }) => {
             followUpObservation
           }}
           onCompleted={res => {
-            console.log(res);
+            setLoading(false);
             const records = res.addPatientRecord.records;
             history.push(
               `/add/file/${patientId}/${records[records.length - 1].id}`
             );
           }}
-          onError={err => console.error(err)}
+          onError={err => {
+            setError('Invalid email or password');
+            setLoading(false);
+          }}
         >
           {addPatientRecord => (
-            <Button onClick={addPatientRecord} variant="primary">
-              Add Record
+            <Button
+              type="submit"
+              variant="primary"
+              style={{ opacity: loading ? 0.7 : 1 }}
+              disabled={loading ? true : false}
+              onClick={() => {
+                setError();
+                if (
+                  patientId &&
+                  patientCaseId &&
+                  id &&
+                  selectedHospitalId &&
+                  eventType &&
+                  observation &&
+                  Tx &&
+                  suggestions &&
+                  cevsSp &&
+                  cevsDp &&
+                  cePr &&
+                  ceRr &&
+                  ceHeight &&
+                  ceWeight &&
+                  medication &&
+                  advice &&
+                  query &&
+                  followUpObservation
+                ) {
+                  setLoading(true);
+                  addPatientRecord();
+                } else {
+                  setError('All fields are required');
+                  setLoading(false);
+                }
+              }}
+            >
+              {loading ? <Spinner /> : 'Add Record'}
             </Button>
           )}
         </Mutation>
