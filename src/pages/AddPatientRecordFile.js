@@ -93,10 +93,15 @@ const AddPatientRecordFile = ({ match, client }) => {
     setError();
     setLoading(true);
     try {
+      const fileNameSplit = file.name.split('.');
+      const fileExt =
+        fileNameSplit.length > 0
+          ? fileNameSplit[fileNameSplit.length - 1]
+          : null;
       const storageRef = firebase
         .storage()
         .ref()
-        .child(`${patientId}_${patientRecordId}_${Date.now()}`);
+        .child(`${patientId}_${patientRecordId}_${Date.now()}.${fileExt}`);
       const snapshot = await storageRef.put(file);
       const fileUrl = await snapshot.ref.getDownloadURL();
       const result = await client.mutate({
