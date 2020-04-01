@@ -287,7 +287,7 @@ const AddPatientRecord = ({ match, client, history }) => {
             );
           }}
           onError={err => {
-            setError('Invalid email or password');
+            setError('Please check your internet connection');
             setLoading(false);
           }}
         >
