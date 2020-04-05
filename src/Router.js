@@ -22,7 +22,7 @@ const Router = () => {
     if (mp) {
       authDispatch({
         type: SET_MP,
-        payload: JSON.parse(mp)
+        payload: JSON.parse(mp),
       });
     }
   }, [authDispatch, mp]);

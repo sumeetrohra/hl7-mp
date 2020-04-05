@@ -38,7 +38,7 @@ const AddNewPatient = ({ history }) => {
   const [MI, setMI] = useState('');
   const [AF, setAF] = useState('');
 
-  const [error, setError] = useState('adshdjfvasdjvfg');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const CREATE_PATIENT_MUTATION = gql`
@@ -138,13 +138,13 @@ const AddNewPatient = ({ history }) => {
   `;
 
   return (
-    <Form onSubmit={e => e.preventDefault()}>
+    <Form onSubmit={(e) => e.preventDefault()}>
       <Form.Group>
         <Form.Label>First Name</Form.Label>
         <Form.Control
           type="text"
           value={fName}
-          onChange={e => setFName(e.target.value)}
+          onChange={(e) => setFName(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -152,7 +152,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={midName}
-          onChange={e => setMidName(e.target.value)}
+          onChange={(e) => setMidName(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -160,7 +160,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={lName}
-          onChange={e => setLName(e.target.value)}
+          onChange={(e) => setLName(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -168,7 +168,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={motherName}
-          onChange={e => setMotherName(e.target.value)}
+          onChange={(e) => setMotherName(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -177,14 +177,14 @@ const AddNewPatient = ({ history }) => {
           type="email"
           placeholder="Enter email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
         <Form.Label>Password</Form.Label>
         <Form.Control
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="Password"
         />
@@ -194,7 +194,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="date"
           value={dob}
-          onChange={e => setDob(e.target.value)}
+          onChange={(e) => setDob(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -202,7 +202,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           as="select"
           value={bg}
-          onChange={e => setBg(e.target.value)}
+          onChange={(e) => setBg(e.target.value)}
         >
           <option>Select one...</option>
           <option>A+</option>
@@ -221,7 +221,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           as="select"
           value={sex}
-          onChange={e => setSex(e.target.value)}
+          onChange={(e) => setSex(e.target.value)}
         >
           <option>Select one...</option>
           <option>Male</option>
@@ -234,7 +234,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={religion}
-          onChange={e => setReligion(e.target.value)}
+          onChange={(e) => setReligion(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -242,7 +242,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           as="select"
           value={maritalStatus}
-          onChange={e => setMaritalStatus(e.target.value)}
+          onChange={(e) => setMaritalStatus(e.target.value)}
         >
           <option>Select one...</option>
           <option>Married</option>
@@ -255,7 +255,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={primaryLanguage}
-          onChange={e => setPrimaryLanguage(e.target.value)}
+          onChange={(e) => setPrimaryLanguage(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -263,7 +263,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={birthPlace}
-          onChange={e => setBirthPlace(e.target.value)}
+          onChange={(e) => setBirthPlace(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -271,7 +271,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={address}
-          onChange={e => setAddress(e.target.value)}
+          onChange={(e) => setAddress(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -279,7 +279,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="number"
           value={countryCode}
-          onChange={e => setCountryCode(Number(e.target.value))}
+          onChange={(e) => setCountryCode(Number(e.target.value))}
         />
       </Form.Group>
       <Form.Group>
@@ -287,7 +287,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={occupation}
-          onChange={e => setOccupation(e.target.value)}
+          onChange={(e) => setOccupation(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -295,7 +295,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={contact1}
-          onChange={e => setContact1(e.target.value)}
+          onChange={(e) => setContact1(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -303,7 +303,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={contact2}
-          onChange={e => setContact2(e.target.value)}
+          onChange={(e) => setContact2(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -311,7 +311,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={socioEconomicStatus}
-          onChange={e => setSocioEconomicStatus(e.target.value)}
+          onChange={(e) => setSocioEconomicStatus(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -319,7 +319,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={immunizationStatus}
-          onChange={e => setImmunizationStatus(e.target.value)}
+          onChange={(e) => setImmunizationStatus(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -327,7 +327,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           as="select"
           value={allergyStatus}
-          onChange={e => setAllergyStatus(Boolean(e.target.value))}
+          onChange={(e) => setAllergyStatus(Boolean(e.target.value))}
         >
           <option>Select one...</option>
           <option value={true}>Yes</option>
@@ -339,7 +339,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           as="select"
           value={organDonorStatus}
-          onChange={e => setOrganDonorStatus(Boolean(e.target.value))}
+          onChange={(e) => setOrganDonorStatus(Boolean(e.target.value))}
         >
           <option>Select one...</option>
           <option value={true}>Yes</option>
@@ -351,7 +351,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={PMH}
-          onChange={e => setPMH(e.target.value)}
+          onChange={(e) => setPMH(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -359,7 +359,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={DHx}
-          onChange={e => setDHx(e.target.value)}
+          onChange={(e) => setDHx(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -367,7 +367,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={Ca}
-          onChange={e => setCa(e.target.value)}
+          onChange={(e) => setCa(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -375,7 +375,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={IDDM}
-          onChange={e => setIDDM(e.target.value)}
+          onChange={(e) => setIDDM(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -383,7 +383,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={NIDDM}
-          onChange={e => setNIDDM(e.target.value)}
+          onChange={(e) => setNIDDM(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -391,7 +391,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={MI}
-          onChange={e => setMI(e.target.value)}
+          onChange={(e) => setMI(e.target.value)}
         />
       </Form.Group>
       <Form.Group>
@@ -399,7 +399,7 @@ const AddNewPatient = ({ history }) => {
         <Form.Control
           type="text"
           value={AF}
-          onChange={e => setAF(e.target.value)}
+          onChange={(e) => setAF(e.target.value)}
         />
       </Form.Group>
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -434,19 +434,19 @@ const AddNewPatient = ({ history }) => {
           IDDM,
           NIDDM,
           MI,
-          AF
+          AF,
         }}
-        onCompleted={res => {
+        onCompleted={(res) => {
           setLoading(false);
           localStorage.setItem('newPat', JSON.stringify(res));
           history.push(`/add/case/${res.addPatient.id}`);
         }}
-        onError={err => {
+        onError={(err) => {
           setError('Some error occurred');
           setLoading(false);
         }}
       >
-        {addPatient => (
+        {(addPatient) => (
           <Button
             variant="primary"
             type="submit"

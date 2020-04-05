@@ -22,13 +22,13 @@ const AddPatientCase = ({ match, client, history }) => {
   const { authState } = useContext(AuthContext);
 
   const {
-    mp: { id }
+    mp: { id },
   } = authState;
 
+  const [icdCodeQuery, setIcdCodeQuery] = useState('');
   const [icdCodes, setIcdCodes] = useState([]);
   const [icdSubCodes, setIcdSubCodes] = useState([]);
   const [hospitals, setHospitals] = useState([]);
-  const [filteredIcdSubCodes, setFilteredIcdSubCodes] = useState([]);
 
   const [selectedIcdCodeID, setSelectedIcdCodeID] = useState('');
   const [selectedIcdSubCodeID, setSelectedIcdSubCodeID] = useState('');
@@ -42,10 +42,11 @@ const AddPatientCase = ({ match, client, history }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState();
+  const [displayIcdCodes, setDisplayIcdCodes] = useState(false);
 
   const GET_ICD_CODES_QUERY = gql`
-    query getIcdCodes {
-      getIcdCodes {
+    query getIcdCodes($icdCode: String!) {
+      getIcdCodes(icdCode: $icdCode) {
         id
         icdCode
         commonName
@@ -54,8 +55,8 @@ const AddPatientCase = ({ match, client, history }) => {
   `;
 
   const GET_ICD_SUB_CODES_QUERY = gql`
-    query getIcdSubCodes {
-      getIcdSubCodes {
+    query getIcdSubCodes($icdCodeId: String!) {
+      getIcdSubCodes(icdCodeId: $icdCodeId) {
         id
         icdSubCode
         scientificName
@@ -102,84 +103,94 @@ const AddPatientCase = ({ match, client, history }) => {
   `;
 
   useEffect(() => {
-    (async function() {
-      const results = await client.query({
-        query: GET_ICD_CODES_QUERY,
-        fetchPolicy: 'network-only'
-      });
-      setIcdCodes(results.data.getIcdCodes);
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async function() {
+    (async function () {
+      if (!selectedIcdCodeID) return;
       const results = await client.query({
         query: GET_ICD_SUB_CODES_QUERY,
-        fetchPolicy: 'network-only'
+        variables: { icdCodeId: selectedIcdCodeID },
+        fetchPolicy: 'network-only',
       });
       setIcdSubCodes(results.data.getIcdSubCodes);
     })();
-  }, []);
+  }, [selectedIcdCodeID]);
 
   useEffect(() => {
-    (async function() {
+    (async function () {
       const results = await client.query({
         query: GET_HOSPITALS_QUERY,
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
       });
       setHospitals(results.data.getHospitals);
     })();
   }, []);
 
-  const handleSelectICDCode = e => {
-    const icdCodeID = e.target.value;
-    setSelectedIcdCodeID(icdCodeID);
-    const filteredSubCodes = icdSubCodes.filter(
-      el => el.icdCode.id === icdCodeID
-    );
-    setFilteredIcdSubCodes(filteredSubCodes);
+  const searchIcdCodes = async () => {
+    if (!icdCodeQuery) return;
+    const results = await client.query({
+      query: GET_ICD_CODES_QUERY,
+      variables: {
+        icdCode: icdCodeQuery,
+      },
+      fetchPolicy: 'network-only',
+    });
+    setIcdCodes(results.data.getIcdCodes);
+    setDisplayIcdCodes(true);
   };
 
   return (
     <>
       <h3>Add Case</h3>
-      <Form onSubmit={e => e.preventDefault()}>
-        {icdCodes.length > 0 ? (
-          <Form.Group>
-            <Form.Label>ICD code</Form.Label>
-            <Form.Control as="select" required onChange={handleSelectICDCode}>
-              <option>Select one...</option>
-              {icdCodes.map(({ icdCode, commonName, id }, i) => (
-                <option
-                  key={i}
-                  value={id}
-                >{`Code: ${icdCode}, Name: ${commonName}`}</option>
-              ))}
-            </Form.Control>
-          </Form.Group>
-        ) : (
-          <>
-            <p>Loading ICD Codes</p>
-            <Spinner />
-          </>
-        )}
-        {filteredIcdSubCodes.length > 0 && (
+      <Form.Group>
+        <Form.Label>Enter ICD Code</Form.Label>
+        <Form.Control
+          type="text"
+          required
+          value={icdCodeQuery}
+          onChange={(e) => setIcdCodeQuery(e.target.value)}
+        />
+        <Button onClick={searchIcdCodes}>Search</Button>
+      </Form.Group>
+      <Form onSubmit={(e) => e.preventDefault()}>
+        {displayIcdCodes ? (
+          icdCodes.length > 0 ? (
+            <Form.Group>
+              <Form.Label>ICD code</Form.Label>
+              <Form.Control
+                as="select"
+                required
+                onChange={(e) => setSelectedIcdCodeID(e.target.value)}
+              >
+                <option>Select one...</option>
+                {icdCodes.map(({ icdCode, commonName, id }, i) => (
+                  <option
+                    key={i}
+                    value={id}
+                  >{`Code: ${icdCode}, Name: ${commonName}`}</option>
+                ))}
+              </Form.Control>
+            </Form.Group>
+          ) : (
+            <>
+              <p>Loading ICD Codes</p>
+              <Spinner />
+            </>
+          )
+        ) : null}
+        {icdSubCodes.length > 0 && (
           <Form.Group>
             <Form.Label>ICD sub code</Form.Label>
             <Form.Control
               as="select"
               required
-              onChange={e => setSelectedIcdSubCodeID(e.target.value)}
+              onChange={(e) => setSelectedIcdSubCodeID(e.target.value)}
             >
               <option>Select one...</option>
-              {filteredIcdSubCodes.map(
-                ({ id, icdSubCode, scientificName }, i) => (
-                  <option
-                    key={i}
-                    value={id}
-                  >{`Sub Code: ${icdSubCode}, Scientific name: ${scientificName}`}</option>
-                )
-              )}
+              {icdSubCodes.map(({ id, icdSubCode, scientificName }, i) => (
+                <option
+                  key={i}
+                  value={id}
+                >{`Sub Code: ${icdSubCode}, Scientific name: ${scientificName}`}</option>
+              ))}
             </Form.Control>
           </Form.Group>
         )}
@@ -189,7 +200,7 @@ const AddPatientCase = ({ match, client, history }) => {
             <Form.Control
               as="select"
               required
-              onChange={e => setSelectedHospitalId(e.target.value)}
+              onChange={(e) => setSelectedHospitalId(e.target.value)}
             >
               <option>Select one...</option>
               {hospitals.length > 0 &&
@@ -212,7 +223,7 @@ const AddPatientCase = ({ match, client, history }) => {
             type="text"
             required
             value={HPC}
-            onChange={e => setHPC(e.target.value)}
+            onChange={(e) => setHPC(e.target.value)}
           />
         </Form.Group>
         <Form.Group>
@@ -220,7 +231,7 @@ const AddPatientCase = ({ match, client, history }) => {
           <Form.Control
             type="text"
             value={MoI}
-            onChange={e => setMoI(e.target.value)}
+            onChange={(e) => setMoI(e.target.value)}
           />
         </Form.Group>
         <Form.Group>
@@ -228,7 +239,7 @@ const AddPatientCase = ({ match, client, history }) => {
           <Form.Control
             type="text"
             value={DnV}
-            onChange={e => setDnV(e.target.value)}
+            onChange={(e) => setDnV(e.target.value)}
           />
         </Form.Group>
         <Form.Group>
@@ -236,7 +247,7 @@ const AddPatientCase = ({ match, client, history }) => {
           <Form.Control
             type="text"
             value={clinicNote}
-            onChange={e => setClinicNote(e.target.value)}
+            onChange={(e) => setClinicNote(e.target.value)}
             required
           />
         </Form.Group>
@@ -245,7 +256,7 @@ const AddPatientCase = ({ match, client, history }) => {
           <Form.Control
             type="text"
             value={diagnosisType}
-            onChange={e => setDiagnosisType(e.target.value)}
+            onChange={(e) => setDiagnosisType(e.target.value)}
             required
           />
         </Form.Group>
@@ -254,7 +265,7 @@ const AddPatientCase = ({ match, client, history }) => {
           <Form.Control
             type="text"
             value={currentClinicalStatus}
-            onChange={e => setCurrentClinicalStatus(e.target.value)}
+            onChange={(e) => setCurrentClinicalStatus(e.target.value)}
             required
           />
         </Form.Group>
@@ -272,18 +283,18 @@ const AddPatientCase = ({ match, client, history }) => {
             DnV,
             clinicNote,
             diagnosisType,
-            currentClinicalStatus
+            currentClinicalStatus,
           }}
-          onCompleted={res => {
+          onCompleted={(res) => {
             setLoading(false);
             history.push(`/add/record/${patientId}/${res.addPatientCase.id}`);
           }}
-          onError={err => {
+          onError={(err) => {
             setError('Some error occurred');
             setLoading(false);
           }}
         >
-          {addPatientCase => (
+          {(addPatientCase) => (
             <Button
               variant="primary"
               type="submit"
